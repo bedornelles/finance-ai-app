@@ -36,26 +36,58 @@ class ChatProvider extends ChangeNotifier{
         tentativas: _tentativas,
       );
 
-      _mensagens.add({"role": "assistant", "content": resposta.mensagem});
+      // Adiciona a resposta da IA na lista só se tiver mensagem
+      if (resposta.mensagem.isNotEmpty) {
+        _mensagens.add({"role": "assistant", "content": resposta.mensagem});
+      }
 
       // Trata cada tipo de resposta
-      if (resposta.tipo == "confirmacao_pendente") {
-        _transacaoPendente = resposta.transacaoPendente;
-        _tentativas = 0;
-      } else if (resposta.tipo == "pergunta_info") {
-        _tentativas++;
-      } else {
-        _tentativas = 0;
-        _transacaoPendente = null;
+      switch (resposta.tipo) {
+        case "confirmacao_pendente":
+        // IA entendeu tudo — guarda a transação e aguarda confirmação
+          _transacaoPendente = resposta.transacaoPendente;
+          _tentativas = 0;
+          break;
+
+        case "pergunta_info":
+        // IA precisa de mais informação
+          _tentativas++;
+          break;
+
+        case "confirmado":
+        // Usuário confirmou — chama o /confirmar
+          if (_transacaoPendente != null) {
+            await confirmarTransacao();
+          }
+          break;
+
+        case "cancelado":
+        // Usuário cancelou — limpa tudo
+          _transacaoPendente = null;
+          _tentativas = 0;
+          break;
+
+        case "pergunta":
+        // IA respondeu uma pergunta sobre gastos
+          _tentativas = 0;
+          _transacaoPendente = null;
+          break;
+
+        default:
+        // Erro ou classificação desconhecida
+          _tentativas = 0;
+          _transacaoPendente = null;
+          break;
       }
-    }catch (e) {
+
+    } catch (e) {
+      print("ERRO COMPLETO: $e");
       _erro = "Erro ao conectar com a IA. Tente novamente.";
       _mensagens.add({"role": "assistant", "content": _erro!});
     } finally {
       _isCarregando = false;
       notifyListeners();
     }
-
   }
 
   Future<void> confirmarTransacao() async {

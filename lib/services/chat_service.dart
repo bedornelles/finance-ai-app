@@ -13,6 +13,10 @@ class ChatService {
   }) async {
     final url = Uri.parse("${ApiService.baseUrl}/api/transacoesia/interpretar");
 
+    print("📤 TEXTO: $texto");
+    print("📤 HISTORICO: $historico");
+    print("📤 TENTATIVAS: $tentativas");
+
     final response = await http.post(
       url,
       headers: {"Content-Type": "application/json"},
