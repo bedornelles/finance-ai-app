@@ -32,9 +32,17 @@ class ChatProvider extends ChangeNotifier{
         texto: texto,
         historico: _mensagens
             .where((m) => m["role"] != "user" || m["content"] != texto)
+            .toList()
+            .reversed
+            .take(6)
+            .toList()
+            .reversed
             .toList(),
         tentativas: _tentativas,
       );
+      print("✅ TIPO RECEBIDO: ${resposta.tipo}");
+      print("✅ MENSAGEM RECEBIDA: ${resposta.mensagem}");
+      print("✅ TRANSACAO PENDENTE: ${resposta.transacaoPendente}");
 
       // Adiciona a resposta da IA na lista só se tiver mensagem
       if (resposta.mensagem.isNotEmpty) {
@@ -84,6 +92,8 @@ class ChatProvider extends ChangeNotifier{
       print("ERRO COMPLETO: $e");
       _erro = "Erro ao conectar com a IA. Tente novamente.";
       _mensagens.add({"role": "assistant", "content": _erro!});
+      _transacaoPendente = null;
+      _tentativas = 0;
     } finally {
       _isCarregando = false;
       notifyListeners();

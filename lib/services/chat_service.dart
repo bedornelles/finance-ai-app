@@ -17,21 +17,35 @@ class ChatService {
     print("📤 HISTORICO: $historico");
     print("📤 TENTATIVAS: $tentativas");
 
-    final response = await http.post(
-      url,
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode({
-        "texto": texto,
-        "historico": historico,
-        "tentativas": tentativas,
-      }),
-    );
+    try{
+      final response = await http.post(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "texto": texto,
+          "historico": historico,
+          "tentativas": tentativas,
+        }),
+      ).timeout(
+        const Duration(seconds: 30),
+        onTimeout: () {
+          print(" TIMEOUT — requisição demorou mais de 30 segundos");
+          throw Exception("Timeout — a IA demorou muito para responder");
+        },
+      );
+
+      print(" STATUS: ${response.statusCode}");
+      print(" BODY: ${response.body}");
 
     if (response.statusCode == 200) {
       final json = jsonDecode(response.body);
       return ChatResposta.fromJson(json);
     } else {
       throw Exception("Erro ao interpretar: ${response.statusCode} - ${response.body}");
+    }
+  } catch (e) {
+      print("❌ ERRO DE CONEXÃO: $e");
+      rethrow;
     }
   }
 
@@ -44,8 +58,15 @@ class ChatService {
       body: jsonEncode(transacao.toJson()),
     );
 
+    print("📥 STATUS: ${response.statusCode}");
+    print("📥 BODY: ${response.body}");
+
     if (response.statusCode == 200) {
       final json = jsonDecode(response.body);
+
+      print("📦 JSON COMPLETO: $json");
+      print("📦 TIPO NO JSON: ${json['tipo']}");
+
       return ChatResposta.fromJson(json);
     } else {
       throw Exception("Erro ao confirmar: ${response.statusCode} - ${response.body}");
