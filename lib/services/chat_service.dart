@@ -44,7 +44,7 @@ class ChatService {
       throw Exception("Erro ao interpretar: ${response.statusCode} - ${response.body}");
     }
   } catch (e) {
-      print("❌ ERRO DE CONEXÃO: $e");
+      print("ERRO DE CONEXÃO: $e");
       rethrow;
     }
   }
@@ -70,6 +70,22 @@ class ChatService {
       return ChatResposta.fromJson(json);
     } else {
       throw Exception("Erro ao confirmar: ${response.statusCode} - ${response.body}");
+    }
+  }
+
+  Future<ChatResposta> excluir(int id) async {
+    final url = Uri.parse("${ApiService.baseUrl}/api/transacoesia/excluir/$id");
+
+    final response = await http.delete(url);
+
+    print("📥 STATUS EXCLUIR: ${response.statusCode}");
+    print("📥 BODY EXCLUIR: ${response.body}");
+
+    if (response.statusCode == 200) {
+      final json = jsonDecode(response.body);
+      return ChatResposta.fromJson(json);
+    } else {
+      throw Exception("Erro ao excluir: ${response.statusCode} - ${response.body}");
     }
   }
 }

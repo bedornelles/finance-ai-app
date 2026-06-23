@@ -21,6 +21,8 @@ class ChatProvider extends ChangeNotifier{
   String? _erro;
   String? get erro => _erro;
 
+  int? _idTransacaoParaExcluir;
+
   Future<void> enviarMensagem(String texto) async {
     _mensagens.add({"role": "user", "content": texto});
     _isCarregando = true;
@@ -62,13 +64,6 @@ class ChatProvider extends ChangeNotifier{
           _tentativas++;
           break;
 
-        case "confirmado":
-        // Usuário confirmou — chama o /confirmar
-          if (_transacaoPendente != null) {
-            await confirmarTransacao();
-          }
-          break;
-
         case "cancelado":
         // Usuário cancelou — limpa tudo
           _transacaoPendente = null;
@@ -79,6 +74,33 @@ class ChatProvider extends ChangeNotifier{
         // IA respondeu uma pergunta sobre gastos
           _tentativas = 0;
           _transacaoPendente = null;
+          break;
+
+        case "exclusao_confirmacao":
+        // IA encontrou 1 transação — guarda o ID e aguarda sim/não
+          _idTransacaoParaExcluir = resposta.transacaoPendente?.id;
+          _tentativas = 0;
+          break;
+
+        case "exclusao_multipla":
+        // IA encontrou mais de 1 — só exibe a lista, usuário precisa ser mais específico
+          _tentativas = 0;
+          _idTransacaoParaExcluir = null;
+          break;
+
+        case "excluido":
+        // Transação excluída com sucesso
+          _idTransacaoParaExcluir = null;
+          _tentativas = 0;
+          break;
+
+        case "confirmado":
+        // Usuário confirmou — verifica se é exclusão ou registro
+          if (_idTransacaoParaExcluir != null) {
+            await excluirTransacao(); // 👈 exclusão
+          } else if (_transacaoPendente != null) {
+            await confirmarTransacao(); // 👈 registro
+          }
           break;
 
         default:
@@ -113,6 +135,26 @@ class ChatProvider extends ChangeNotifier{
       _tentativas = 0;
     } catch (e) {
       _erro = "Erro ao salvar a transação. Tente novamente.";
+      _mensagens.add({"role": "assistant", "content": _erro!});
+    } finally {
+      _isCarregando = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> excluirTransacao() async {
+    if (_idTransacaoParaExcluir == null) return;
+
+    _isCarregando = true;
+    notifyListeners();
+
+    try {
+      final resposta = await _chatService.excluir(_idTransacaoParaExcluir!);
+      _mensagens.add({"role": "assistant", "content": resposta.mensagem});
+      _idTransacaoParaExcluir = null;
+      _tentativas = 0;
+    } catch (e) {
+      _erro = "Erro ao excluir a transação. Tente novamente.";
       _mensagens.add({"role": "assistant", "content": _erro!});
     } finally {
       _isCarregando = false;
