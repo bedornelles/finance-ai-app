@@ -11,7 +11,7 @@ class DashboardProvider extends ChangeNotifier {
   String _periodoSelecionado = "mes";
   String get periodoSelecionado => _periodoSelecionado;
 
-  bool _isCarregando = false;
+  bool _isCarregando = true;
   bool get isCarregando => _isCarregando;
 
   String? _erro;
@@ -34,5 +34,11 @@ class DashboardProvider extends ChangeNotifier {
       _isCarregando = false;
       notifyListeners();
     }
+  }
+  void resetar() {
+    _dashboardData = null;
+    _isCarregando = true;
+    _erro = null;
+    notifyListeners();
   }
 }
