@@ -129,59 +129,57 @@ class _DashboardPageState extends State<DashboardPage> {
                   ),
                 ),
 
-                dashboard.isCarregando
-                    ? const SizedBox(
-                  height: 32,
-                  child: Center(
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  child: dashboard.isCarregando
+                      ? const SizedBox(
+                    key: ValueKey('loading'),
+                    height: 32,
                     child: CircularProgressIndicator(
                       color: Colors.white,
                       strokeWidth: 2,
                     ),
-                  ),
-                )
-                    : Text(
-                  _formatarMoeda(
-                      dashboard.dashboardData?.saldo ?? 0),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-
-                if (dashboard.dashboardData != null)
-                  Row(
+                  )
+                      : Column(
+                    key: ValueKey('data'),
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Variação 24h
-                      Icon(
-                        dashboard.dashboardData!.variacao24h <= 0
-                            ? Icons.arrow_downward
-                            : Icons.arrow_upward,
-                        color: dashboard.dashboardData!.variacao24h <= 0
-                            ? Colors.greenAccent
-                            : Colors.redAccent,
-                        size: 12,
-                      ),
                       Text(
-                        " ${_formatarMoeda(dashboard.dashboardData!.variacao24h.abs())} em 24h",
+                        _formatarMoeda(dashboard.dashboardData?.saldo ?? 0),
                         style: const TextStyle(
-                            color: Colors.white70, fontSize: 11),
+                          color: Colors.white,
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
                       ),
-                      // variacao24h negativa = gastou menos que ontem = bom (verde)
-                      // variacao24h positiva = gastou mais que ontem = ruim (vermelho)
-
-                      const Text(" • ",
-                          style: TextStyle(
-                              color: Colors.white38, fontSize: 11)),
-
-                      // Quantidade de transações
-                      Text(
-                        "${dashboard.dashboardData!.quantidadeTransacoes} transações no mês",
-                        style: const TextStyle(
-                            color: Colors.white70, fontSize: 11),
-                      ),
+                      if (dashboard.dashboardData != null)
+                        Row(
+                          children: [
+                            Icon(
+                              dashboard.dashboardData!.variacao24h <= 0
+                                  ? Icons.arrow_downward
+                                  : Icons.arrow_upward,
+                              color: dashboard.dashboardData!.variacao24h <= 0
+                                  ? Colors.greenAccent
+                                  : Colors.redAccent,
+                              size: 12,
+                            ),
+                            Flexible(
+                              child: Text(
+                                " ${_formatarMoeda(dashboard.dashboardData!.variacao24h.abs())} em 24h  •  ${dashboard.dashboardData!.quantidadeTransacoes} transações",
+                                style: const TextStyle(
+                                    color: Colors.white70, fontSize: 11),
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                              ),
+                            ),
+                          ],
+                        ),
                     ],
                   ),
+                )
               ],
             ),
           ),
