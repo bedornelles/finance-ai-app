@@ -22,18 +22,21 @@ class PorCategoria {
   final String categoria;
   final double total;
   final double percentual;
+  final String tipo;
 
   PorCategoria({
     required this.categoria,
     required this.total,
     required this.percentual,
+    required this.tipo
   });
 
   factory PorCategoria.fromJson(Map<String, dynamic> json) {
     return PorCategoria(
-        categoria: json["categoria"] ?? "",
-        total: (json["total"] as num).toDouble(),
-        percentual: (json["percentual"] as num).toDouble(),
+      categoria: json["categoria"] ?? "",
+      total: (json["total"] as num).toDouble(),
+      percentual: (json["percentual"] as num).toDouble(),
+      tipo: json["tipo"] ?? "Despesa",
     );
   }
 }

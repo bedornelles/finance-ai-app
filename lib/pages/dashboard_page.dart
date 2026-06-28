@@ -40,6 +40,8 @@ class _DashboardPageState extends State<DashboardPage> {
     Color(0xFF6B4226),
   ];
 
+  String _tipoGrafico = "Despesa";
+
   @override
   void initState() {
     super.initState();
@@ -271,132 +273,174 @@ class _DashboardPageState extends State<DashboardPage> {
                 ],
               ),
 
-              child: dashboard.dashboardData?.porCategoria.isEmpty ?? true
-                  ? const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(32),
-                  child: Text(
-                    "Nenhuma despesa registrada no período",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.grey),
-                  ),
-                ),
-              )
-                  : Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  //Gráfico donnut
-                  SizedBox(
-                    width: 140,
-                    height: 140,
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        PieChart(
-                          PieChartData(
-                            sectionsSpace: 2,
-                            centerSpaceRadius: 45,
-                            sections: _buildSecoesPizza(
-                                dashboard),
+
+                  // ── Botão toggle Despesas / Receitas ──
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: ["Despesa", "Receita"].map((tipo) {
+                      final selecionado = _tipoGrafico == tipo;
+                      return GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _tipoGrafico = tipo;
+                          });
+                        },
+                        child: Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 4),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: selecionado
+                                ? const Color(0xFF1B4332)
+                                : const Color(0xFFF5F0E8),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            tipo == "Despesa" ? "Despesas" : "Receitas",
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: selecionado
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                              color: selecionado
+                                  ? Colors.white
+                                  : const Color(0xFF2C2C2A),
+                            ),
                           ),
                         ),
+                      );
+                    }).toList(),
+                  ),
 
-                        Column(
-                          mainAxisAlignment:
-                          MainAxisAlignment.center,
+                  const SizedBox(height: 16),
+
+                  // ── Gráfico donnut + legenda ──
+                  (dashboard.dashboardData?.porCategoria
+                      .where((cat) => cat.tipo == _tipoGrafico)
+                      .isEmpty ?? true)
+                      ? const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(32),
+                      child: Text(
+                        "Nenhuma despesa registrada no período",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                    ),
+                  )
+                      : Row(
+                    children: [
+                      // ── Gráfico donnut ──
+                      SizedBox(
+                        width: 140,
+                        height: 140,
+                        child: Stack(
+                          alignment: Alignment.center,
                           children: [
-                            Text(
-                              DateFormat("MMMM", "pt_BR")
-                                  .format(DateTime.now())
-                                  .toUpperCase(),
-                              style: const TextStyle(
-                                fontSize: 8,
-                                color: Colors.grey,
-                                letterSpacing: 0.5,
+                            PieChart(
+                              PieChartData(
+                                sectionsSpace: 2,
+                                centerSpaceRadius: 45,
+                                sections: _buildSecoesPizza(dashboard),
                               ),
                             ),
-                            Text(
-                              _formatarMoeda(dashboard
-                                  .dashboardData
-                                  ?.totalDespesas ??
-                                  0),
-                              style: const TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF2C2C2A),
-                              ),
-                            ),
-                            const Text(
-                              "total gasto",
-                              style: TextStyle(
-                                fontSize: 8,
-                                color: Colors.grey,
-                              ),
+                            // ── Texto central ──
+                            Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  DateFormat("MMMM", "pt_BR")
+                                      .format(DateTime.now())
+                                      .toUpperCase(),
+                                  style: const TextStyle(
+                                    fontSize: 8,
+                                    color: Colors.grey,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                                Text(
+                                  _formatarMoeda(_tipoGrafico == "Despesa"
+                                      ? dashboard.dashboardData?.totalDespesas ?? 0
+                                      : dashboard.dashboardData?.totalReceitas ?? 0),
+                                  // 👆 muda o valor central conforme o tipo selecionado
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF2C2C2A),
+                                  ),
+                                ),
+                                Text(
+                                  _tipoGrafico == "Despesa"
+                                      ? "total gasto"
+                                      : "total recebido",
+                                  // 👆 muda o label conforme o tipo selecionado
+                                  style: const TextStyle(
+                                    fontSize: 8,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
-                      ],
-                    ),
-                  ),
+                      ),
 
-                  const SizedBox(width: 20),
+                      const SizedBox(width: 20),
 
-                  //Legenda das categorias
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment:
-                      CrossAxisAlignment.start,
-                      children: dashboard
-                          .dashboardData!.porCategoria
-                          .take(6)
-
-                          .toList()
-                          .asMap()
-                          .entries
-                          .map((entry) {
-                        final index = entry.key;
-                        final cat = entry.value;
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 3),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 8,
-                                height: 8,
-                                decoration: BoxDecoration(
-                                  color: _coresCategorias[
-                                  index %
-                                      _coresCategorias
-                                          .length],
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-
-                              const SizedBox(width: 6),
-                              Expanded(
-                                child: Text(
-                                  cat.categoria,
-                                  style: const TextStyle(
+                      // ── Legenda ──
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: dashboard
+                              .dashboardData!.porCategoria
+                              .where((cat) => cat.tipo == _tipoGrafico)
+                              .take(6)
+                              .toList()
+                              .asMap()
+                              .entries
+                              .map((entry) {
+                            final index = entry.key;
+                            final cat = entry.value;
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 3),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 8,
+                                    height: 8,
+                                    decoration: BoxDecoration(
+                                      color: _coresCategorias[
+                                      index % _coresCategorias.length],
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Expanded(
+                                    child: Text(
+                                      cat.categoria,
+                                      style: const TextStyle(
+                                          fontSize: 11, color: Color(0xFF2C2C2A)),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  Text(
+                                    "${cat.percentual.toStringAsFixed(0)}%",
+                                    style: const TextStyle(
                                       fontSize: 11,
-                                      color:
-                                      Color(0xFF2C2C2A)),
-                                  overflow:
-                                  TextOverflow.ellipsis,
-                                ),
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF2C2C2A),
+                                    ),
+                                  ),
+                                ],
                               ),
-                              Text(
-                                "${cat.percentual.toStringAsFixed(0)}%",
-                                style: const TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF2C2C2A),
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      }).toList(),
-                    ),
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -509,21 +553,22 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  List<PieChartSectionData> _buildSecoesPizza(
-      DashboardProvider dashboard) {
-    final categorias =
-    dashboard.dashboardData!.porCategoria.take(6).toList();
+  List<PieChartSectionData> _buildSecoesPizza(DashboardProvider dashboard) {
+    final categorias = dashboard.dashboardData!.porCategoria
+      .where((cat) => cat.tipo == _tipoGrafico)
+        .take(6)
+        .toList();
+
+    if (categorias.isEmpty) return [];
+
     return categorias.asMap().entries.map((entry) {
       final index = entry.key;
       final cat = entry.value;
       return PieChartSectionData(
         value: cat.percentual,
-
         color: _coresCategorias[index % _coresCategorias.length],
         radius: 30,
-
         showTitle: false,
-
       );
     }).toList();
   }
