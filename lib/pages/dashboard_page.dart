@@ -610,7 +610,37 @@ class _DashboardPageState extends State<DashboardPage> {
                     style: TextStyle(fontSize: 11, color: Colors.grey)),
               ],
             ),
+            const SizedBox(height: 20),
 
+            // ── Título ──
+            const Text(
+              "Últimas transações",
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF2C2C2A),
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            // ── Lista ──
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: _buildListaTransacoes(dashboard),
+            ),
+
+            const SizedBox(height: 20),
           ],
         ),
       ),
@@ -746,5 +776,114 @@ class _DashboardPageState extends State<DashboardPage> {
       if (dia.receitas > max) max = dia.receitas;
     }
     return max * 1.2;
+  }
+
+  Widget _buildListaTransacoes(DashboardProvider dashboard) {
+    // Pega as transações do período via DashboardService
+    // Como não temos lista individual no DashboardData,
+    // usamos o porDia para mostrar os dias com movimentação
+    // e buscamos as transações do provider
+    final transacoes = dashboard.ultimasTransacoes;
+
+    if (transacoes.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.all(32),
+        child: Center(
+          child: Text(
+            "Nenhuma transação no período",
+            style: TextStyle(color: Colors.grey),
+          ),
+        ),
+      );
+    }
+
+    return Column(
+      children: transacoes.asMap().entries.map((entry) {
+        final index = entry.key;
+        final t = entry.value;
+        final isUltimo = index == transacoes.length - 1;
+        final isDespesa = t.tipo == "Despesa";
+
+        return Container(
+          padding: const EdgeInsets.symmetric(
+              horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            border: isUltimo
+                ? null
+                : Border(
+              bottom: BorderSide(
+                color: Colors.grey.withOpacity(0.1),
+                width: 1,
+              ),
+            ),
+            // linha divisória entre os itens, exceto o último
+          ),
+          child: Row(
+            children: [
+              // ── Ícone da categoria ──
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: isDespesa
+                      ? const Color(0xFFFAECE7)
+                      : const Color(0xFFE1F5EE),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  isDespesa
+                      ? Icons.arrow_upward
+                      : Icons.arrow_downward,
+                  color: isDespesa
+                      ? const Color(0xFFB85C38)
+                      : const Color(0xFF2D6A4F),
+                  size: 18,
+                ),
+              ),
+              // seta para cima = despesa (dinheiro saindo)
+              // seta para baixo = receita (dinheiro entrando)
+
+              const SizedBox(width: 12),
+
+              // ── Categoria e data ──
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      t.categoria,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF2C2C2A),
+                      ),
+                    ),
+                    Text(
+                      DateFormat("dd/MM/yyyy").format(t.data),
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // ── Valor ──
+              Text(
+                "${isDespesa ? '-' : '+'} ${_formatarMoeda(t.valor)}",
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  color: isDespesa
+                      ? const Color(0xFFB85C38)
+                      : const Color(0xFF2D6A4F),
+                ),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
+    );
   }
 }

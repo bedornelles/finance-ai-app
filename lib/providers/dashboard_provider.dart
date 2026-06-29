@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:registrai/models/dashboard.dart';
 import 'package:registrai/services/dashboard_service.dart';
+import 'package:registrai/models/transacao.dart';
 
 class DashboardProvider extends ChangeNotifier {
   final DashboardService _dashboardService = DashboardService();
@@ -16,6 +17,9 @@ class DashboardProvider extends ChangeNotifier {
 
   String? _erro;
   String? get erro => _erro;
+
+  List<Transacao> get ultimasTransacoes =>
+      _dashboardData?.ultimasTransacoes ?? [];
 
   Future<void> buscarDashboard({String? periodo}) async {
     if (periodo != null) {

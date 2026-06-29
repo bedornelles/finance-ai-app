@@ -85,43 +85,17 @@ class _ChatPageState extends State<ChatPage> {
         ],
       ),
       actions: [
-        Builder(
-          builder: (context) => IconButton(
-            icon: const Icon(Icons.menu, color: Colors.white),
-            onPressed: () => Scaffold.of(context).openEndDrawer(),
-          ),
+        IconButton(
+          icon: const Icon(Icons.bar_chart, color: Colors.white),
+          // ícone de gráfico — representa o dashboard
+          onPressed: () => context.go(AppRoutes.dashboard),
+          tooltip: "Ver dashboard",
         ),
       ],
     ),
-    endDrawer: Drawer(
-      child: SafeArea(
-        child: Column(
-          children: [
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(24),
-              color: const Color(0xFF1B4332),
-              child: const Text(
-                "RegistrAI",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.dashboard, color: Color(0xFF1B4332)),
-              title: const Text("Dashboard"),
-              onTap: () {
-                Navigator.pop(context);
-                context.go(AppRoutes.dashboard);
-              },
-            ),
-          ],
-        ),
-      ),
-    ),
+
+
+
     body: Column(
       children: [
         Padding(

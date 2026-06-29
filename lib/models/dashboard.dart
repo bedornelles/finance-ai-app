@@ -1,3 +1,5 @@
+import 'package:registrai/models/transacao.dart';
+
 class PorDia {
   final String dia;
   final double receitas;
@@ -49,6 +51,7 @@ class DashboardData {
   final double variacao24h;
   final List<PorDia> porDia;
   final List<PorCategoria> porCategoria;
+  final List<Transacao> ultimasTransacoes;
 
   DashboardData({
     required this.totalReceitas,
@@ -58,6 +61,7 @@ class DashboardData {
     required this.variacao24h,
     required this.porDia,
     required this.porCategoria,
+    required this.ultimasTransacoes,
   });
 
   factory DashboardData.fromJson(Map<String, dynamic> json) {
@@ -74,6 +78,9 @@ class DashboardData {
 
       porCategoria: (json["porCategoria"] as List)
           .map((item) => PorCategoria.fromJson(item))
+          .toList(),
+      ultimasTransacoes: (json["ultimasTransacoes"] as List) // 👈 novo
+          .map((item) => Transacao.fromJson(item))
           .toList(),
     );
   }
