@@ -445,6 +445,172 @@ class _DashboardPageState extends State<DashboardPage> {
                 ],
               ),
             ),
+
+            const SizedBox(height: 20),
+
+            const Text(
+              "Evolução diária",
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF2C2C2A),
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: dashboard.dashboardData!.porDia.isEmpty
+                  ? const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(32),
+                  child: Text(
+                    "Nenhum dado disponível",
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                ),
+              )
+                  : SizedBox(
+                height: 180,
+                child: BarChart(
+                  BarChartData(
+                    alignment: BarChartAlignment.spaceAround,
+                    maxY: _calcularMaxY(dashboard),
+
+                    barTouchData: BarTouchData(
+                      enabled: true,
+                      touchTooltipData: BarTouchTooltipData(
+                        getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                          final dia = dashboard.dashboardData!.porDia[groupIndex];
+                          final valor = rodIndex == 0 ? dia.despesas : dia.receitas;
+                          final tipo = rodIndex == 0 ? "Despesa" : "Receita";
+                          return BarTooltipItem(
+                            "$tipo\n${_formatarMoeda(valor)}",
+                            const TextStyle(color: Colors.white, fontSize: 10),
+                          );
+                        },
+
+                      ),
+                    ),
+                    titlesData: FlTitlesData(
+                      show: true,
+                      bottomTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          getTitlesWidget: (value, meta) {
+                            final diasComMovimento = dashboard.dashboardData!.porDia
+                                .where((d) => d.despesas > 0 || d.receitas > 0)
+                                .toList();
+                            final index = value.toInt();
+                            if (index >= diasComMovimento.length) return const SizedBox();
+                            final dia = diasComMovimento[index].dia;
+                            final numero = dia.split('-').last;
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 4),
+                              child: Text(
+                                numero,
+                                style: const TextStyle(fontSize: 9, color: Colors.grey),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      leftTitles: AxisTitles(
+                        sideTitles: SideTitles(showTitles: false),
+                      ),
+                      rightTitles: AxisTitles(
+                        sideTitles: SideTitles(showTitles: false),
+                      ),
+                      topTitles: AxisTitles(
+                        sideTitles: SideTitles(showTitles: false),
+                      ),
+                    ),
+                    gridData: FlGridData(
+                      show: true,
+                      drawVerticalLine: false,
+                      getDrawingHorizontalLine: (value) => FlLine(
+                        color: Colors.grey.withOpacity(0.15),
+                        strokeWidth: 1,
+                      ),
+                    ),
+                    borderData: FlBorderData(show: false),
+                    barGroups: dashboard.dashboardData!.porDia
+                        .asMap()
+                        .entries
+                        .where((entry) =>
+                    entry.value.despesas > 0 || entry.value.receitas > 0)
+                        .toList()
+                        .asMap()
+                        .entries
+                        .map((entry) {
+                      final index = entry.key;
+                      final dia = entry.value.value;
+                      return BarChartGroupData(
+                        x: index,
+                        barRods: [
+                          BarChartRodData(
+                            toY: dia.despesas,
+                            color: const Color(0xFFB85C38),
+                            width: 8,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          BarChartRodData(
+                            toY: dia.receitas,
+                            color: const Color(0xFF2D6A4F),
+                            width: 8,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ],
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ),
+            ),
+
+// ── Legenda do gráfico de barras ──
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 10,
+                  height: 10,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFB85C38),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(width: 4),
+                const Text("Despesas",
+                    style: TextStyle(fontSize: 11, color: Colors.grey)),
+                const SizedBox(width: 16),
+                Container(
+                  width: 10,
+                  height: 10,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2D6A4F),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(width: 4),
+                const Text("Receitas",
+                    style: TextStyle(fontSize: 11, color: Colors.grey)),
+              ],
+            ),
+
           ],
         ),
       ),
@@ -571,5 +737,14 @@ class _DashboardPageState extends State<DashboardPage> {
         showTitle: false,
       );
     }).toList();
+  }
+
+  double _calcularMaxY(DashboardProvider dashboard) {
+    double max = 0;
+    for (final dia in dashboard.dashboardData!.porDia) {
+      if (dia.despesas > max) max = dia.despesas;
+      if (dia.receitas > max) max = dia.receitas;
+    }
+    return max * 1.2;
   }
 }
